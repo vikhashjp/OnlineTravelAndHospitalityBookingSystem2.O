@@ -9,25 +9,34 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/invoices")
-@CrossOrigin(origins = "*") // Enables CORS for frontend interaction
+@RestController // Marks this class as a REST controller for handling HTTP requests
+@RequestMapping("/api/invoices") // Defines the base path for invoice-related endpoints
+@CrossOrigin(origins = "*") // Enables CORS to allow frontend applications to interact with this API
 public class InvoiceController {
 
-    @Autowired
-    private InvoiceService invoiceService;
+	@Autowired // Injects the InvoiceService to handle business logic
+	private InvoiceService invoiceService;
 
-    @GetMapping
-    public ResponseEntity<Object> getAllInvoices() {
-        try {
-            List<InvoiceDTO> invoices = invoiceService.getAllInvoices();
-            if (invoices.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No invoices found");
-            }
-            return ResponseEntity.ok(invoices);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching invoices: " + e.getMessage());
-        }
-    }
+	/**
+	 * Retrieves all invoices from the database.
+	 * 
+	 * @return A list of invoices or an error message if retrieval fails.
+	 */
+	@GetMapping
+	public ResponseEntity<Object> getAllInvoices() {
+		try {
+			List<InvoiceDTO> invoices = invoiceService.getAllInvoices();
+
+			// If no invoices exist, return NO CONTENT status
+			if (invoices.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No invoices found");
+			}
+
+			// Return the list of invoices with OK status
+			return ResponseEntity.ok(invoices);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Error fetching invoices: " + e.getMessage());
+		}
+	}
 }

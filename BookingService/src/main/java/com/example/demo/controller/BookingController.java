@@ -10,25 +10,38 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/bookings")
-@CrossOrigin(origins = "*") // Enables CORS for frontend interaction
+@RestController // Marks this class as a Spring REST controller handling HTTP requests
+@RequestMapping("/api/bookings") // Defines the base path for booking-related endpoints
+@CrossOrigin(origins = "*") // Enables CORS, allowing frontend applications to access this API from
+							// different origins
 public class BookingController {
 
-    @Autowired
-    private IBookingService bookingService;
+	@Autowired // Injects the Booking Service dependency
+	private IBookingService bookingService;
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<Object> getBookingsByUser(@PathVariable Long userId) {
-        try {
-            List<Booking> bookings = bookingService.getBookingsByUser(userId);
-            if (bookings.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No bookings found for this user.");
-            }
-            return ResponseEntity.ok(bookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching bookings: " + e.getMessage());
-        }
-    }
+	/**
+	 * Fetches all bookings for a specific user.
+	 * 
+	 * @param userId The ID of the user whose bookings are being retrieved.
+	 * @return A ResponseEntity containing the bookings or an error message.
+	 */
+	@GetMapping("/{userId}")
+	public ResponseEntity<Object> getBookingsByUser(@PathVariable Long userId) {
+		try {
+			// Retrieve bookings for the given user ID
+			List<Booking> bookings = bookingService.getBookingsByUser(userId);
+
+			// If no bookings exist, return NOT FOUND response
+			if (bookings.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No bookings found for this user.");
+			}
+
+			// Return the list of bookings with OK status
+			return ResponseEntity.ok(bookings);
+		} catch (Exception e) {
+			// Handle unexpected errors and return INTERNAL SERVER ERROR response
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Error fetching bookings: " + e.getMessage());
+		}
+	}
 }

@@ -7,31 +7,52 @@ import org.springframework.stereotype.Service;
 import com.entity.UserInfo;
 import com.repository.UserInfoRepository;
 
-@Service
+/**
+ * Service class for managing user operations such as registration and role
+ * retrieval.
+ */
+@Service // Marks this class as a Spring-managed service component
 public class UserService {
-	@Autowired
+
+	@Autowired // Injects the UserInfoRepository for database operations
 	private UserInfoRepository repository;
 
-	@Autowired
+	@Autowired // Injects the PasswordEncoder for secure password hashing
 	private PasswordEncoder passwordEncoder;
 
+	/**
+	 * Registers a new user in the system. Ensures the username is unique before
+	 * saving the user.
+	 * 
+	 * @param userInfo The user details provided for registration.
+	 * @return A success or failure message based on registration status.
+	 */
 	public String addUser(UserInfo userInfo) {
 		String name = userInfo.getName();
-		UserInfo obj1 = repository.findByName(name).orElse(null);
-		System.out.println(obj1);
-		if (obj1 == null) {
+		UserInfo existingUser = repository.findByName(name).orElse(null);
+		System.out.println(existingUser); // Debugging statement (can be removed in production)
+
+		if (existingUser == null) {
+			// Encode password before storing
 			userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
 			repository.save(userInfo);
-			return "Registration Successfully ";
+			return "Registration Successful!";
 		} else {
-			return "This UserName is Already Registered.";
+			return "This Username is Already Registered.";
 		}
 	}
 
+	/**
+	 * Retrieves the roles assigned to a user.
+	 * 
+	 * @param username The username whose roles are requested.
+	 * @return The roles associated with the user or "Not Found" if the user does
+	 *         not exist.
+	 */
 	public String getRoles(String username) {
-		UserInfo obj2 = repository.findByName(username).orElse(null);
-		if (obj2 != null) {
-			return obj2.getRoles();
+		UserInfo user = repository.findByName(username).orElse(null);
+		if (user != null) {
+			return user.getRoles();
 		}
 		return "Not Found";
 	}

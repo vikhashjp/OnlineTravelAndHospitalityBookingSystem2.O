@@ -20,117 +20,147 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest // Marks this class as a Spring Boot test configuration
 class ReviewAndSupportServiceApplicationTests {
 
-    @Mock
-    private ReviewRepository reviewRepository;
+	@Mock // Creates a mock instance of ReviewRepository for testing
+	private ReviewRepository reviewRepository;
 
-    @Mock
-    private SupportTicketRepository supportTicketRepository;
+	@Mock // Creates a mock instance of SupportTicketRepository for testing
+	private SupportTicketRepository supportTicketRepository;
 
-    @InjectMocks
-    private ReviewAndSupportService reviewAndSupportService;
+	@InjectMocks // Injects the mocked repositories into ReviewAndSupportService
+	private ReviewAndSupportService reviewAndSupportService;
 
-    @Test
-    void testSubmitReview() {
-        ReviewDTO reviewDTO = new ReviewDTO();
-        reviewDTO.setUserId(101L);
-        reviewDTO.setHotelId(202L);
-        reviewDTO.setRating(5);
-        reviewDTO.setComment("Amazing experience!");
+	/**
+	 * Tests the review submission functionality. Ensures that a review is correctly
+	 * saved in the repository.
+	 */
+	@Test
+	void testSubmitReview() {
+		ReviewDTO reviewDTO = new ReviewDTO();
+		reviewDTO.setUserId(101L);
+		reviewDTO.setHotelId(202L);
+		reviewDTO.setRating(5);
+		reviewDTO.setComment("Amazing experience!");
 
-        Review reviewEntity = new Review();
-        reviewEntity.setId(1L);
-        reviewEntity.setUserId(reviewDTO.getUserId());
-        reviewEntity.setHotelId(reviewDTO.getHotelId());
-        reviewEntity.setRating(reviewDTO.getRating());
-        reviewEntity.setComment(reviewDTO.getComment());
+		// Mocking review entity behavior
+		Review reviewEntity = new Review();
+		reviewEntity.setId(1L);
+		reviewEntity.setUserId(reviewDTO.getUserId());
+		reviewEntity.setHotelId(reviewDTO.getHotelId());
+		reviewEntity.setRating(reviewDTO.getRating());
+		reviewEntity.setComment(reviewDTO.getComment());
 
-        when(reviewRepository.save(any(Review.class))).thenReturn(reviewEntity);
+		when(reviewRepository.save(any(Review.class))).thenReturn(reviewEntity);
 
-        reviewAndSupportService.submitReview(reviewDTO);
+		// Execute service method
+		reviewAndSupportService.submitReview(reviewDTO);
 
-        verify(reviewRepository, times(1)).save(any(Review.class));
-    }
+		// Verify that the repository method was called once
+		verify(reviewRepository, times(1)).save(any(Review.class));
+	}
 
-    @Test
-    void testGetAllReviews() {
-        Review review1 = new Review();
-        review1.setId(1L);
-        review1.setUserId(101L);
-        review1.setHotelId(202L);
-        review1.setRating(5);
-        review1.setComment("Great stay!");
+	/**
+	 * Tests the retrieval of all reviews from the database. Ensures correct data
+	 * conversion and validation.
+	 */
+	@Test
+	void testGetAllReviews() {
+		Review review1 = new Review();
+		review1.setId(1L);
+		review1.setUserId(101L);
+		review1.setHotelId(202L);
+		review1.setRating(5);
+		review1.setComment("Great stay!");
 
-        Review review2 = new Review();
-        review2.setId(2L);
-        review2.setUserId(102L);
-        review2.setHotelId(203L);
-        review2.setRating(4);
-        review2.setComment("Nice hotel!");
+		Review review2 = new Review();
+		review2.setId(2L);
+		review2.setUserId(102L);
+		review2.setHotelId(203L);
+		review2.setRating(4);
+		review2.setComment("Nice hotel!");
 
-        List<Review> reviews = Arrays.asList(review1, review2);
+		List<Review> reviews = Arrays.asList(review1, review2);
 
-        when(reviewRepository.findAll()).thenReturn(reviews);
+		// Mock repository behavior
+		when(reviewRepository.findAll()).thenReturn(reviews);
 
-        List<ReviewDTO> reviewDTOs = reviewAndSupportService.getAllReviews();
+		// Execute service method
+		List<ReviewDTO> reviewDTOs = reviewAndSupportService.getAllReviews();
 
-        assertNotNull(reviewDTOs);
-        assertEquals(2, reviewDTOs.size());
-        assertEquals("Great stay!", reviewDTOs.get(0).getComment());
+		// Assertions to verify correct retrieval
+		assertNotNull(reviewDTOs);
+		assertEquals(2, reviewDTOs.size());
+		assertEquals("Great stay!", reviewDTOs.get(0).getComment());
 
-        verify(reviewRepository, times(1)).findAll();
-    }
+		// Verify repository interaction
+		verify(reviewRepository, times(1)).findAll();
+	}
 
-    @Test
-    void testSubmitSupportTicket() {
-        SupportTicketDTO ticketDTO = new SupportTicketDTO();
-        ticketDTO.setUserId(101L);
-        ticketDTO.setIssue("Payment not processed");
-        ticketDTO.setStatus("Open");
-        ticketDTO.setAssignedAgent("Agent1");
+	/**
+	 * Tests the support ticket submission functionality. Ensures that a support
+	 * ticket is correctly saved in the repository.
+	 */
+	@Test
+	void testSubmitSupportTicket() {
+		SupportTicketDTO ticketDTO = new SupportTicketDTO();
+		ticketDTO.setUserId(101L);
+		ticketDTO.setIssue("Payment not processed");
+		ticketDTO.setStatus("Open");
+		ticketDTO.setAssignedAgent("Agent1");
 
-        SupportTicket ticketEntity = new SupportTicket();
-        ticketEntity.setId(1L);
-        ticketEntity.setUserId(ticketDTO.getUserId());
-        ticketEntity.setIssue(ticketDTO.getIssue());
-        ticketEntity.setStatus(ticketDTO.getStatus());
-        ticketEntity.setAssignedAgent(ticketDTO.getAssignedAgent());
+		// Mocking support ticket entity behavior
+		SupportTicket ticketEntity = new SupportTicket();
+		ticketEntity.setId(1L);
+		ticketEntity.setUserId(ticketDTO.getUserId());
+		ticketEntity.setIssue(ticketDTO.getIssue());
+		ticketEntity.setStatus(ticketDTO.getStatus());
+		ticketEntity.setAssignedAgent(ticketDTO.getAssignedAgent());
 
-        when(supportTicketRepository.save(any(SupportTicket.class))).thenReturn(ticketEntity);
+		when(supportTicketRepository.save(any(SupportTicket.class))).thenReturn(ticketEntity);
 
-        reviewAndSupportService.submitSupportTicket(ticketDTO);
+		// Execute service method
+		reviewAndSupportService.submitSupportTicket(ticketDTO);
 
-        verify(supportTicketRepository, times(1)).save(any(SupportTicket.class));
-    }
+		// Verify that the repository method was called once
+		verify(supportTicketRepository, times(1)).save(any(SupportTicket.class));
+	}
 
-    @Test
-    void testGetAllSupportTickets() {
-        SupportTicket ticket1 = new SupportTicket();
-        ticket1.setId(1L);
-        ticket1.setUserId(101L);
-        ticket1.setIssue("Payment not processed");
-        ticket1.setStatus("Open");
-        ticket1.setAssignedAgent("Agent1");
+	/**
+	 * Tests the retrieval of all support tickets from the database. Ensures correct
+	 * data conversion and validation.
+	 */
+	@Test
+	void testGetAllSupportTickets() {
+		SupportTicket ticket1 = new SupportTicket();
+		ticket1.setId(1L);
+		ticket1.setUserId(101L);
+		ticket1.setIssue("Payment not processed");
+		ticket1.setStatus("Open");
+		ticket1.setAssignedAgent("Agent1");
 
-        SupportTicket ticket2 = new SupportTicket();
-        ticket2.setId(2L);
-        ticket2.setUserId(102L);
-        ticket2.setIssue("Refund delayed");
-        ticket2.setStatus("Closed");
-        ticket2.setAssignedAgent("Agent2");
+		SupportTicket ticket2 = new SupportTicket();
+		ticket2.setId(2L);
+		ticket2.setUserId(102L);
+		ticket2.setIssue("Refund delayed");
+		ticket2.setStatus("Closed");
+		ticket2.setAssignedAgent("Agent2");
 
-        List<SupportTicket> tickets = Arrays.asList(ticket1, ticket2);
+		List<SupportTicket> tickets = Arrays.asList(ticket1, ticket2);
 
-        when(supportTicketRepository.findAll()).thenReturn(tickets);
+		// Mock repository behavior
+		when(supportTicketRepository.findAll()).thenReturn(tickets);
 
-        List<SupportTicketDTO> ticketDTOs = reviewAndSupportService.getAllSupportTickets();
+		// Execute service method
+		List<SupportTicketDTO> ticketDTOs = reviewAndSupportService.getAllSupportTickets();
 
-        assertNotNull(ticketDTOs);
-        assertEquals(2, ticketDTOs.size());
-        assertEquals("Payment not processed", ticketDTOs.get(0).getIssue());
+		// Assertions to verify correct retrieval
+		assertNotNull(ticketDTOs);
+		assertEquals(2, ticketDTOs.size());
+		assertEquals("Payment not processed", ticketDTOs.get(0).getIssue());
 
-        verify(supportTicketRepository, times(1)).findAll();
-    }
+		// Verify repository interaction
+		verify(supportTicketRepository, times(1)).findAll();
+	}
 }

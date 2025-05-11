@@ -5,11 +5,21 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@SpringBootApplication
-@EnableDiscoveryClient // Eureka Client Enabled
-@EnableFeignClients // Feign Client Enabled
+/**
+ * Main application class for the User and Role Management Service. This serves
+ * as the entry point for the Spring Boot application.
+ */
+@SpringBootApplication // Enables Spring Boot auto-configuration and component scanning
+@EnableDiscoveryClient // Registers this service as a Eureka client for service discovery
+@EnableFeignClients // Enables Feign clients for RESTful communication with other microservices
 public class UserAndRoleManagementServiceApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(UserAndRoleManagementServiceApplication.class, args);
-    }
+
+	/**
+	 * Main method to start the Spring Boot application.
+	 * 
+	 * @param args Command-line arguments
+	 */
+	public static void main(String[] args) {
+		SpringApplication.run(UserAndRoleManagementServiceApplication.class, args);
+	}
 }

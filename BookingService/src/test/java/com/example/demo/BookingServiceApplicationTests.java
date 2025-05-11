@@ -20,104 +20,117 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.Date;
 
-@ExtendWith(MockitoExtension.class) // Enables Mockito testing
-@SpringBootTest
+@ExtendWith(MockitoExtension.class) // Enables Mockito testing and allows dependency injection
+@SpringBootTest // Marks this class as a Spring Boot test
 class BookingServiceApplicationTests {
 
-    @Mock
-    private BookingRepository bookingRepository; // Mock Repository
+	@Mock // Creates a mock instance of BookingRepository
+	private BookingRepository bookingRepository;
 
-    @InjectMocks
-    private BookingServiceImpl bookingService; // Inject Implementation of IBookingService
+	@InjectMocks // Injects mock dependencies into BookingServiceImpl
+	private BookingServiceImpl bookingService;
 
-    @Test
-    void testCreateBooking() {
-        // Mock Booking Data
-        Booking mockBooking = new Booking();
-        mockBooking.setBookingId(1L);
-        mockBooking.setUserId(101L);
-        mockBooking.setType("Hotel");
-        mockBooking.setPaymentId(202L);
-        mockBooking.setHotelId(303L);
-        mockBooking.setStatus("Pending");
-        mockBooking.setBookingDate(new Date());
+	/**
+	 * Tests booking creation functionality.
+	 */
+	@Test
+	void testCreateBooking() {
+		// Mock Booking Data
+		Booking mockBooking = new Booking();
+		mockBooking.setBookingId(1L);
+		mockBooking.setUserId(101L);
+		mockBooking.setType("Hotel");
+		mockBooking.setPaymentId(202L);
+		mockBooking.setHotelId(303L);
+		mockBooking.setStatus("Pending");
+		mockBooking.setBookingDate(new Date());
 
-        // Define mock behavior
-        when(bookingRepository.save(any(Booking.class))).thenReturn(mockBooking);
+		// Define mock behavior: Simulates repository saving functionality
+		when(bookingRepository.save(any(Booking.class))).thenReturn(mockBooking);
 
-        // Call Service Method
-        Booking result = bookingService.createBooking(mockBooking);
+		// Call Service Method
+		Booking result = bookingService.createBooking(mockBooking);
 
-        // Assertions
-        assertNotNull(result);
-        assertEquals(101L, result.getUserId());
-        assertEquals("Hotel", result.getType());
-        assertEquals("Pending", result.getStatus());
+		// Assertions: Verify returned booking matches expected values
+		assertNotNull(result);
+		assertEquals(101L, result.getUserId());
+		assertEquals("Hotel", result.getType());
+		assertEquals("Pending", result.getStatus());
 
-        // Verify interaction
-        verify(bookingRepository, times(1)).save(any(Booking.class));
-    }
+		// Verify interaction: Ensure save method is called exactly once
+		verify(bookingRepository, times(1)).save(any(Booking.class));
+	}
 
-    @Test
-    void testGetBookingsByUser() {
-        // Mock Booking Data
-        Booking booking1 = new Booking();
-        booking1.setBookingId(1L);
-        booking1.setUserId(101L);
-        booking1.setType("Hotel");
+	/**
+	 * Tests fetching bookings for a specific user.
+	 */
+	@Test
+	void testGetBookingsByUser() {
+		// Mock Booking Data
+		Booking booking1 = new Booking();
+		booking1.setBookingId(1L);
+		booking1.setUserId(101L);
+		booking1.setType("Hotel");
 
-        Booking booking2 = new Booking();
-        booking2.setBookingId(2L);
-        booking2.setUserId(101L);
-        booking2.setType("Flight");
+		Booking booking2 = new Booking();
+		booking2.setBookingId(2L);
+		booking2.setUserId(101L);
+		booking2.setType("Flight");
 
-        // Define mock behavior
-        when(bookingRepository.findByUserId(101L)).thenReturn(Arrays.asList(booking1, booking2));
+		// Define mock behavior: Simulates database query
+		when(bookingRepository.findByUserId(101L)).thenReturn(Arrays.asList(booking1, booking2));
 
-        // Call Service Method
-        List<Booking> bookings = bookingService.getBookingsByUser(101L);
+		// Call Service Method
+		List<Booking> bookings = bookingService.getBookingsByUser(101L);
 
-        // Assertions
-        assertNotNull(bookings);
-        assertEquals(2, bookings.size());
+		// Assertions: Verify correct number of bookings returned
+		assertNotNull(bookings);
+		assertEquals(2, bookings.size());
 
-        // Verify interaction
-        verify(bookingRepository, times(1)).findByUserId(101L);
-    }
+		// Verify interaction: Ensure repository method is called once
+		verify(bookingRepository, times(1)).findByUserId(101L);
+	}
 
-    @Test
-    void testUpdateBookingStatus_Success() {
-        // Mock Booking Data
-        Booking mockBooking = new Booking();
-        mockBooking.setBookingId(1L);
-        mockBooking.setStatus("Pending");
+	/**
+	 * Tests successful booking status update.
+	 */
+	@Test
+	void testUpdateBookingStatus_Success() {
+		// Mock Booking Data
+		Booking mockBooking = new Booking();
+		mockBooking.setBookingId(1L);
+		mockBooking.setStatus("Pending");
 
-        // Define mock behavior
-        when(bookingRepository.findById(1L)).thenReturn(Optional.of(mockBooking));
-        when(bookingRepository.save(any(Booking.class))).thenReturn(mockBooking);
+		// Define mock behavior: Simulates finding and updating booking status
+		when(bookingRepository.findById(1L)).thenReturn(Optional.of(mockBooking));
+		when(bookingRepository.save(any(Booking.class))).thenReturn(mockBooking);
 
-        // Call Service Method
-        Booking updatedBooking = bookingService.updateBookingStatus(1L, "Confirmed");
+		// Call Service Method
+		Booking updatedBooking = bookingService.updateBookingStatus(1L, "Confirmed");
 
-        // Assertions
-        assertNotNull(updatedBooking);
-        assertEquals("Confirmed", updatedBooking.getStatus());
+		// Assertions: Verify booking status change
+		assertNotNull(updatedBooking);
+		assertEquals("Confirmed", updatedBooking.getStatus());
 
-        // Verify interactions
-        verify(bookingRepository, times(1)).findById(1L);
-        verify(bookingRepository, times(1)).save(any(Booking.class));
-    }
+		// Verify interactions: Ensure repository find/save methods are called
+		verify(bookingRepository, times(1)).findById(1L);
+		verify(bookingRepository, times(1)).save(any(Booking.class));
+	}
 
-    @Test
-    void testUpdateBookingStatus_NotFound() {
-        // Define mock behavior for non-existent booking
-        when(bookingRepository.findById(1L)).thenReturn(Optional.empty());
+	/**
+	 * Tests booking status update failure due to non-existent booking.
+	 */
+	@Test
+	void testUpdateBookingStatus_NotFound() {
+		// Define mock behavior for non-existent booking: Simulates empty result
+		when(bookingRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // Expect exception
-        assertThrows(BookingNotFoundException.class, () -> bookingService.updateBookingStatus(1L, "Confirmed"));
+		// Expect exception: Verify BookingNotFoundException is thrown
+		assertThrows(BookingNotFoundException.class, () -> bookingService.updateBookingStatus(1L, "Confirmed"));
 
-        // Verify interaction
-        verify(bookingRepository, times(1)).findById(1L);
-        verify(bookingRepository, never()).save(any(Booking.class));
-    }
+		// Verify interaction: Ensure repository find method is called once and save
+		// method is never called
+		verify(bookingRepository, times(1)).findById(1L);
+		verify(bookingRepository, never()).save(any(Booking.class));
+	}
 }
