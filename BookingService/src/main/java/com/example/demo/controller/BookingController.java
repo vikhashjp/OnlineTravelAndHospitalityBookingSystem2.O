@@ -1,47 +1,56 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Booking;
+import com.example.demo.dto.BookingRequest;
 import com.example.demo.service.IBookingService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController // Marks this class as a Spring REST controller handling HTTP requests
-@RequestMapping("/api/bookings") // Defines the base path for booking-related endpoints
-@CrossOrigin(origins = "*") // Enables CORS, allowing frontend applications to access this API from
-							// different origins
+/**
+ * Controller for handling booking-related operations. Defines endpoints for
+ * creating, retrieving, and canceling bookings.
+ */
+@RestController // Marks this class as a REST controller
+@RequestMapping("/api/bookings") // Defines the base URL for booking-related endpoints
+@CrossOrigin(origins = "*") // Allows cross-origin requests from any domain
 public class BookingController {
 
-	@Autowired // Injects the Booking Service dependency
-	private IBookingService bookingService;
+	@Autowired
+	private IBookingService bookingService; // Injecting the booking service dependency
 
 	/**
-	 * Fetches all bookings for a specific user.
+	 * Creates a new booking.
 	 * 
-	 * @param userId The ID of the user whose bookings are being retrieved.
-	 * @return A ResponseEntity containing the bookings or an error message.
+	 * @param bookingRequest The request body containing booking details.
+	 * @return The newly created booking wrapped in a ResponseEntity.
+	 */
+	@PostMapping("/create")
+	public ResponseEntity<Booking> createBooking(@RequestBody BookingRequest bookingRequest) {
+		return ResponseEntity.ok(bookingService.createBooking(bookingRequest));
+	}
+
+	/**
+	 * Retrieves all bookings for a specific user.
+	 * 
+	 * @param userId The ID of the user whose bookings are being fetched.
+	 * @return A list of bookings associated with the user.
 	 */
 	@GetMapping("/{userId}")
-	public ResponseEntity<Object> getBookingsByUser(@PathVariable Long userId) {
-		try {
-			// Retrieve bookings for the given user ID
-			List<Booking> bookings = bookingService.getBookingsByUser(userId);
+	public ResponseEntity<List<Booking>> getBookingsByUser(@PathVariable Long userId) {
+		return ResponseEntity.ok(bookingService.getBookingsByUser(userId));
+	}
 
-			// If no bookings exist, return NOT FOUND response
-			if (bookings.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No bookings found for this user.");
-			}
-
-			// Return the list of bookings with OK status
-			return ResponseEntity.ok(bookings);
-		} catch (Exception e) {
-			// Handle unexpected errors and return INTERNAL SERVER ERROR response
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Error fetching bookings: " + e.getMessage());
-		}
+	/**
+	 * Cancels a booking by its ID.
+	 * 
+	 * @param bookingId The ID of the booking to cancel.
+	 * @return The updated booking with status changed to "Cancelled".
+	 */
+	@DeleteMapping("/cancel/{bookingId}")
+	public ResponseEntity<Booking> cancelBooking(@PathVariable Long bookingId) {
+		return ResponseEntity.ok(bookingService.cancelBooking(bookingId));
 	}
 }

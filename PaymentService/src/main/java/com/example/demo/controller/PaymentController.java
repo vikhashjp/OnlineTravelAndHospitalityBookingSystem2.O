@@ -25,15 +25,22 @@ public class PaymentController {
 	 * @return A response entity with CREATED status if successful, or BAD REQUEST
 	 *         if an error occurs.
 	 */
-	@PostMapping
-	public ResponseEntity<String> processPayment(@Valid @RequestBody PaymentDTO paymentDTO) {
-		try {
-			paymentService.processPayment(paymentDTO);
-			return ResponseEntity.status(HttpStatus.CREATED).body("Payment processed successfully!");
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to process payment: " + e.getMessage());
-		}
+	@PostMapping("/process")
+	public ResponseEntity<Object> processPayment(@RequestBody PaymentDTO paymentDTO) {
+	    if (paymentDTO.getBookingId() == null) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                .body("Error: Booking ID is required for payment processing.");
+	    }
+	    
+	    try {
+	        PaymentDTO processedPayment = paymentService.processPayment(paymentDTO);
+	        return ResponseEntity.status(HttpStatus.CREATED).body(processedPayment);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error processing payment: " + e.getMessage());
+	    }
 	}
+
 
 	/**
 	 * Retrieves all processed payments.

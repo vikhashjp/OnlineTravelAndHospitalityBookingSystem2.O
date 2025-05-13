@@ -1,166 +1,140 @@
 package com.example.demo.service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.demo.dto.BookingRequest;
+import com.example.demo.dto.PackageDTO;
+import com.example.demo.dto.UserDTO;
+import com.example.demo.exceptions.BookingNotFoundException;
+import com.example.demo.feignclients.PackageClient;
+import com.example.demo.feignclients.UserClient;
+import com.example.demo.model.Booking;
+import com.example.demo.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.example.demo.exceptions.BookingNotFoundException;
-import com.example.demo.model.Booking;
-import com.example.demo.model.Flight;
-import com.example.demo.model.Hotel;
-import com.example.demo.repository.BookingRepository;
-import com.example.demo.repository.FlightRepository;
-import com.example.demo.repository.HotelRepository;
+import java.util.List;
 
-@Service // Marks this class as a Spring-managed service component
+/**
+ * Implementation of IBookingService that manages booking operations. Handles
+ * creation, validation, retrieval, and cancellation of bookings.
+ */
+@Service
 public class BookingServiceImpl implements IBookingService {
 
-	private static final Logger log = LoggerFactory.getLogger(BookingServiceImpl.class); // Logger for debugging
+	// Logger instance for debugging and tracking
+	private static final Logger logger = LoggerFactory.getLogger(BookingServiceImpl.class);
 
-	@Autowired // Injects Booking repository to interact with the database
+	// Injecting BookingRepository for database operations
+	@Autowired
 	private BookingRepository bookingRepository;
 
-	@Autowired // Injects Flight repository for flight-related operations
-	private FlightRepository flightRepository;
+	// Injecting UserClient to fetch user-related details from another microservice
+	@Autowired
+	private UserClient userClient;
 
-	@Autowired // Injects Hotel repository for hotel-related operations
-	private HotelRepository hotelRepository;
+	// Injecting PackageClient to fetch package details from another microservice
+	@Autowired
+	private PackageClient packageClient;
 
 	/**
-	 * Creates a new booking and updates availability for flights or hotels.
+	 * Creates a new booking. Validates booking details before saving it in the
+	 * database.
 	 * 
-	 * @param booking The booking details provided by the user.
-	 * @return The saved booking entity.
+	 * @param bookingRequest The request object containing booking details.
+	 * @return The saved Booking object.
 	 */
 	@Override
-	public Booking createBooking(Booking booking) {
-		log.info("Creating booking: {}", booking);
+	public Booking createBooking(BookingRequest bookingRequest) {
+		logger.info("Attempting to create booking for user ID: {}", bookingRequest.getUserId());
 
-		booking.setBookingDate(new Date()); // Sets the booking date to the current date
-		booking.setStatus("Confirmed"); // Default booking status set to "Confirmed"
+		// Validate booking parameters before proceeding
+		validateBooking(bookingRequest);
 
-		// Handling Flight booking availability update
-		if ("Flight".equalsIgnoreCase(booking.getType()) && booking.getFlightId() != null) {
-			Optional<Flight> flightOpt = flightRepository.findById(booking.getFlightId());
+		// Creating a Booking object and setting its properties
+		Booking booking = new Booking();
+		booking.setUserId(bookingRequest.getUserId());
+		booking.setPackageId(bookingRequest.getPackageId());
+		booking.setType(bookingRequest.getType());
+		booking.setHotelId(bookingRequest.getHotelId());
+		booking.setFlightId(bookingRequest.getFlightId());
+		booking.setNumberOfRooms(bookingRequest.getNumberOfRooms());
+		booking.setNumberOfSeats(bookingRequest.getNumberOfSeats());
+		booking.setStatus("Confirmed");
 
-			if (flightOpt.isPresent()) {
-				Flight flight = flightOpt.get();
-				if (flight.getAvailability() >= booking.getNumberOfRooms()) {
-					flight.setAvailability(flight.getAvailability() - booking.getNumberOfRooms());
-					flightRepository.save(flight);
-					log.info("Updated flight availability: {}", flight);
-				} else {
-					log.error("Not enough seats available!");
-					throw new RuntimeException("Not enough seats available!");
-				}
-			} else {
-				log.error("Flight not found!");
-				throw new RuntimeException("Flight not found!");
-			}
-		}
-
-		// Handling Hotel booking availability update
-		if ("Hotel".equalsIgnoreCase(booking.getType()) && booking.getHotelId() != null) {
-			Optional<Hotel> hotelOpt = hotelRepository.findById(booking.getHotelId());
-
-			if (hotelOpt.isPresent()) {
-				Hotel hotel = hotelOpt.get();
-				if (hotel.getRoomsAvailable() >= booking.getNumberOfRooms()) {
-					hotel.setRoomsAvailable(hotel.getRoomsAvailable() - booking.getNumberOfRooms());
-					hotelRepository.save(hotel);
-					log.info("Updated hotel availability: {}", hotel);
-				} else {
-					log.error("Not enough rooms available!");
-					throw new RuntimeException("Not enough rooms available!");
-				}
-			} else {
-				log.error("Hotel not found!");
-				throw new RuntimeException("Hotel not found!");
-			}
-		}
-
+		// Saving the booking to the database
 		Booking savedBooking = bookingRepository.save(booking);
-		log.info("Booking successfully created: {}", savedBooking);
+		logger.info("Booking successfully created with ID: {}", savedBooking.getBookingId());
+
 		return savedBooking;
 	}
 
 	/**
-	 * Retrieves bookings for a specific user.
+	 * Validates booking details based on booking type. Ensures required fields are
+	 * provided before booking creation.
 	 * 
-	 * @param userId The user ID whose bookings are being fetched.
-	 * @return A list of bookings associated with the user.
+	 * @param bookingRequest The request object containing booking details.
+	 * @throws IllegalArgumentException if mandatory fields are missing.
+	 */
+	private void validateBooking(BookingRequest bookingRequest) {
+		logger.debug("Validating booking request: {}", bookingRequest);
+
+		// If the booking type is "Hotel", ensure number of rooms is provided
+		if ("Hotel".equalsIgnoreCase(bookingRequest.getType()) && bookingRequest.getNumberOfRooms() == null) {
+			logger.error("Validation failed: Number of rooms is required for hotel booking.");
+			throw new IllegalArgumentException("Number of rooms is required for hotel booking.");
+		}
+
+		// If the booking type is "Flight", ensure number of seats is provided
+		if ("Flight".equalsIgnoreCase(bookingRequest.getType()) && bookingRequest.getNumberOfSeats() == null) {
+			logger.error("Validation failed: Number of seats is required for flight booking.");
+			throw new IllegalArgumentException("Number of seats is required for flight booking.");
+		}
+
+		logger.debug("Validation successful for booking request.");
+	}
+
+	/**
+	 * Retrieves a list of bookings for a given user ID.
+	 * 
+	 * @param userId The ID of the user whose bookings are being retrieved.
+	 * @return List of Booking objects belonging to the user.
 	 */
 	@Override
 	public List<Booking> getBookingsByUser(Long userId) {
-		log.info("Fetching bookings for user ID: {}", userId);
+		logger.info("Fetching bookings for user ID: {}", userId);
+
 		List<Booking> bookings = bookingRepository.findByUserId(userId);
-		log.info("Retrieved bookings: {}", bookings);
+		logger.info("Found {} bookings for user ID: {}", bookings.size(), userId);
+
 		return bookings;
 	}
 
 	/**
-	 * Updates the status of an existing booking.
+	 * Cancels a booking by changing its status to "Cancelled". Throws an exception
+	 * if the booking ID does not exist.
 	 * 
-	 * @param bookingId The ID of the booking.
-	 * @param status    The new status to be assigned to the booking.
-	 * @return The updated booking entity.
-	 */
-	@Override
-	public Booking updateBookingStatus(Long bookingId, String status) {
-		log.info("Updating booking status for ID {} to {}", bookingId, status);
-		Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> {
-			log.error("Booking not found with ID: {}", bookingId);
-			return new BookingNotFoundException("Booking not found with ID: " + bookingId);
-		});
-		booking.setStatus(status);
-		Booking updatedBooking = bookingRepository.save(booking);
-		log.info("Booking status updated: {}", updatedBooking);
-		return updatedBooking;
-	}
-
-	/**
-	 * Cancels a booking and restores availability in flights or hotels.
-	 * 
-	 * @param bookingId The ID of the booking to be canceled.
-	 * @return The canceled booking entity.
+	 * @param bookingId The ID of the booking to cancel.
+	 * @return The updated Booking object after cancellation.
+	 * @throws BookingNotFoundException if the booking is not found.
 	 */
 	@Override
 	public Booking cancelBooking(Long bookingId) {
-		log.info("Canceling booking with ID: {}", bookingId);
+		logger.info("Attempting to cancel booking with ID: {}", bookingId);
+
+		// Retrieve booking from the database; throw exception if not found
 		Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> {
-			log.error("Booking not found with ID: {}", bookingId);
-			return new BookingNotFoundException("Booking not found with ID: " + bookingId);
+			logger.error("Booking with ID {} not found.", bookingId);
+			return new BookingNotFoundException("Booking not found");
 		});
 
-		booking.setStatus("Canceled");
+		// Update booking status to "Cancelled"
+		booking.setStatus("Cancelled");
 
-		log.info("Processing flight or hotel availability restoration...");
+		// Save the updated booking
+		Booking cancelledBooking = bookingRepository.save(booking);
+		logger.info("Booking with ID {} successfully cancelled.", bookingId);
 
-		// Restores flight availability if canceled
-		if ("Flight".equalsIgnoreCase(booking.getType()) && booking.getFlightId() != null) {
-			flightRepository.findById(booking.getFlightId()).ifPresent(flight -> {
-				flight.setAvailability(flight.getAvailability() + booking.getNumberOfRooms());
-				flightRepository.save(flight);
-				log.info("Updated flight availability after cancellation: {}", flight);
-			});
-		}
-
-		// Restores hotel room availability if canceled
-		if ("Hotel".equalsIgnoreCase(booking.getType()) && booking.getHotelId() != null) {
-			hotelRepository.findById(booking.getHotelId()).ifPresent(hotel -> {
-				hotel.setRoomsAvailable(hotel.getRoomsAvailable() + booking.getNumberOfRooms());
-				hotelRepository.save(hotel);
-				log.info("Updated hotel availability after cancellation: {}", hotel);
-			});
-		}
-
-		Booking canceledBooking = bookingRepository.save(booking);
-		log.info("Booking successfully canceled: {}", canceledBooking);
-		return canceledBooking;
+		return cancelledBooking;
 	}
 }

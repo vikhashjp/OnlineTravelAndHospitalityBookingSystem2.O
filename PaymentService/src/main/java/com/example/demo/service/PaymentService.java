@@ -13,8 +13,9 @@ public interface PaymentService {
 	 * Processes a payment transaction based on the provided details.
 	 * 
 	 * @param paymentDTO The payment information submitted by the user.
+	 * @return 
 	 */
-	void processPayment(PaymentDTO paymentDTO);
+	PaymentDTO processPayment(PaymentDTO paymentDTO);
 
 	/**
 	 * Retrieves all processed payments.

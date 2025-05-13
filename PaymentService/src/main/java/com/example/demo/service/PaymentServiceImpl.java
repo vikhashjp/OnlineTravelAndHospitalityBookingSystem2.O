@@ -28,9 +28,10 @@ public class PaymentServiceImpl implements PaymentService {
 	 * is successful, an invoice is generated.
 	 * 
 	 * @param paymentDTO The payment information submitted by the user.
+	 * @return 
 	 */
 	@Override
-	public void processPayment(PaymentDTO paymentDTO) {
+	public PaymentDTO processPayment(PaymentDTO paymentDTO) {
 		log.info("Processing payment for Booking ID: {}, User ID: {}, Amount: {}", paymentDTO.getBookingId(),
 				paymentDTO.getUserId(), paymentDTO.getAmount());
 
@@ -51,6 +52,7 @@ public class PaymentServiceImpl implements PaymentService {
 			log.info("Payment successful, generating invoice...");
 			invoiceService.generateInvoice(paymentDTO.getBookingId(), paymentDTO.getUserId(), paymentDTO.getAmount());
 		}
+		return paymentDTO;
 	}
 
 	/**

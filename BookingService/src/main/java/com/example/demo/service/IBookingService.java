@@ -1,44 +1,36 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Booking;
+import com.example.demo.dto.BookingRequest;
 import java.util.List;
 
 /**
- * Service interface for managing booking operations. Defines the core methods
- * required for booking creation, retrieval, status updates, and cancellation.
+ * Interface for Booking Service. Defines methods for creating, retrieving, and
+ * canceling bookings.
  */
 public interface IBookingService {
 
 	/**
-	 * Creates a new booking.
+	 * Creates a new booking based on the provided request.
 	 * 
-	 * @param booking The booking details provided by the user.
-	 * @return The saved booking entity.
+	 * @param bookingRequest The request object containing booking details.
+	 * @return The newly created Booking object.
 	 */
-	Booking createBooking(Booking booking);
+	Booking createBooking(BookingRequest bookingRequest);
 
 	/**
-	 * Retrieves bookings for a specific user.
+	 * Retrieves a list of bookings for a specified user.
 	 * 
-	 * @param userId The user ID whose bookings are being fetched.
-	 * @return A list of bookings associated with the user.
+	 * @param userId The ID of the user whose bookings are being retrieved.
+	 * @return A list of Booking objects associated with the user.
 	 */
 	List<Booking> getBookingsByUser(Long userId);
 
 	/**
-	 * Updates the status of an existing booking.
+	 * Cancels a booking by changing its status.
 	 * 
-	 * @param bookingId The ID of the booking.
-	 * @param status    The new status to be assigned to the booking.
-	 * @return The updated booking entity.
+	 * @param bookingId The ID of the booking to cancel.
+	 * @return The updated Booking object after cancellation.
 	 */
-	Booking updateBookingStatus(Long bookingId, String status);
-
-	/**
-	 * Cancels a booking.
-	 * 
-	 * @param bookingId The ID of the booking to be canceled.
-	 * @return The canceled booking entity.
-	 */
-	Booking cancelBooking(Long bookingId); // New method for cancellation
+	Booking cancelBooking(Long bookingId);
 }

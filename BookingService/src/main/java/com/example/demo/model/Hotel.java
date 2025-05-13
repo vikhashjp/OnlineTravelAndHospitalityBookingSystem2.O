@@ -3,146 +3,85 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
-@Entity // Marks this class as a JPA entity, mapping it to a database table
-@Table(name = "hotel") // Specifies the table name for this entity
+/**
+ * Represents a Hotel entity in the database. Stores details like hotel name,
+ * location, availability, rating, and pricing.
+ */
+@Entity
+@Table(name = "hotel") // Maps this entity to the "hotel" table
 public class Hotel {
 
-	@Id // Defines the primary key
-	@GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generates unique hotel IDs
-	@Column(name = "hotel_id") // Maps to "hotel_id" column in the database
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-increments the hotel ID
 	private Long hotelId;
 
-	@Column(nullable = false, length = 100) // Ensures the column is required and limits length
-	@NotBlank(message = "Hotel name is required") // Validation: Cannot be blank
-	@Size(max = 100, message = "Hotel name must not exceed 100 characters") // Restricts length
-	private String name; // Name of the hotel
-
-	@Column(nullable = false, length = 100)
-	@NotBlank(message = "Location is required") // Validation: Cannot be blank
-	@Size(max = 100, message = "Location must not exceed 100 characters") // Restricts length
-	private String location; // Address or city of the hotel
+	@Column(nullable = false)
+	@NotBlank(message = "Hotel name is required") // Ensures hotel name is not empty
+	private String name;
 
 	@Column(nullable = false)
-	@Min(value = 0, message = "Rooms available cannot be negative") // Ensures non-negative room availability
-	private int roomsAvailable; // Number of available rooms in the hotel
+	@NotBlank(message = "Location is required") // Ensures location is provided
+	private String location;
 
 	@Column(nullable = false)
-	@Min(value = 0, message = "Rating cannot be negative") // Ensures rating isn't below 0
-	@Max(value = 5, message = "Rating must be between 0 and 5") // Restricts rating range
-	private double rating; // Average customer rating for the hotel
+	@Min(value = 1, message = "Rooms must be at least 1") // Validates minimum number of available rooms
+	private Integer roomsAvailable;
 
 	@Column(nullable = false)
-	@NotNull(message = "Price per night is required") // Ensures price per night is provided
-	@Positive(message = "Price per night must be positive") // Ensures price isn't negative
-	private double pricePerNight; // Cost per night for a hotel stay
+	@DecimalMin(value = "0.0", message = "Rating must be non-negative") // Ensures rating is non-negative
+	private Double rating;
+
+	@Column(nullable = false)
+	@DecimalMin(value = "0.0", message = "Price must be non-negative") // Ensures price per night is non-negative
+	private Double pricePerNight;
 
 	// Getters and Setters
 
-	/**
-	 * Retrieves the hotel ID.
-	 * 
-	 * @return The unique hotel ID.
-	 */
 	public Long getHotelId() {
 		return hotelId;
 	}
 
-	/**
-	 * Sets the hotel ID.
-	 * 
-	 * @param hotelId The unique hotel ID.
-	 */
 	public void setHotelId(Long hotelId) {
 		this.hotelId = hotelId;
 	}
 
-	/**
-	 * Retrieves the hotel name.
-	 * 
-	 * @return The hotel name.
-	 */
 	public String getName() {
 		return name;
 	}
 
-	/**
-	 * Sets the hotel name.
-	 * 
-	 * @param name The name of the hotel.
-	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
-	/**
-	 * Retrieves the hotel location.
-	 * 
-	 * @return The hotel location.
-	 */
 	public String getLocation() {
 		return location;
 	}
 
-	/**
-	 * Sets the hotel location.
-	 * 
-	 * @param location The address or city where the hotel is located.
-	 */
 	public void setLocation(String location) {
 		this.location = location;
 	}
 
-	/**
-	 * Retrieves the number of available rooms.
-	 * 
-	 * @return The available rooms count.
-	 */
-	public int getRoomsAvailable() {
+	public Integer getRoomsAvailable() {
 		return roomsAvailable;
 	}
 
-	/**
-	 * Sets the number of available rooms.
-	 * 
-	 * @param roomsAvailable The count of available rooms.
-	 */
-	public void setRoomsAvailable(int roomsAvailable) {
+	public void setRoomsAvailable(Integer roomsAvailable) {
 		this.roomsAvailable = roomsAvailable;
 	}
 
-	/**
-	 * Retrieves the hotel rating.
-	 * 
-	 * @return The hotel's rating.
-	 */
-	public double getRating() {
+	public Double getRating() {
 		return rating;
 	}
 
-	/**
-	 * Sets the hotel rating.
-	 * 
-	 * @param rating The rating of the hotel (0-5 scale).
-	 */
-	public void setRating(double rating) {
+	public void setRating(Double rating) {
 		this.rating = rating;
 	}
 
-	/**
-	 * Retrieves the price per night for a stay.
-	 * 
-	 * @return The price per night.
-	 */
-	public double getPricePerNight() {
+	public Double getPricePerNight() {
 		return pricePerNight;
 	}
 
-	/**
-	 * Sets the price per night.
-	 * 
-	 * @param pricePerNight The cost of staying per night at the hotel.
-	 */
-	public void setPricePerNight(double pricePerNight) {
+	public void setPricePerNight(Double pricePerNight) {
 		this.pricePerNight = pricePerNight;
 	}
 }
